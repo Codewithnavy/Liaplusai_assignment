@@ -112,7 +112,7 @@
 
       // Observe chat container for new messages and scroll into view.
       try {
-        if (chat) {
+          if (chat) {
           const observer = new MutationObserver((mutations) => {
             for (const m of mutations) {
               if (m.addedNodes && m.addedNodes.length) {
@@ -120,18 +120,6 @@
                 const last = chat.querySelector('.bubble:last-of-type');
                 if (last) {
                   last.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                  // show a tiny transient 'New' badge on the last bot bubble if present
-                  const botBubble = chat.querySelector('.bot-bubble:last-of-type');
-                  if (botBubble) {
-                    const nb = document.createElement('span');
-                    nb.className = 'new-badge';
-                    nb.textContent = 'New';
-                    botBubble.appendChild(nb);
-                    setTimeout(() => {
-                      nb.style.opacity = '0';
-                      setTimeout(() => nb.remove(), 400);
-                    }, 1800);
-                  }
                 }
               }
             }
@@ -157,10 +145,100 @@
         chat.appendChild(wrap);
         // small delay then scroll
         setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 40);
+        // show toast for bot replies
+        if (who === 'bot') {
+          try { showToast('Bot: ' + (text.length > 80 ? text.slice(0,80) + '…' : text)); } catch(e){}
+        }
+      }
+
+      // simple toast show/hide helper
+      function showToast(msg, pos = 'bottom-right', timeout = 4200) {
+        try {
+          const s = loadSettings();
+          if (!s.toastEnabled) return;
+        } catch (e) {}
+        const t = document.createElement('div');
+        t.className = 'chat-toast ' + (pos || 'bottom-right');
+        t.textContent = msg;
+        document.body.appendChild(t);
+        // allow CSS transitions
+        setTimeout(() => t.classList.add('visible'), 60);
+        // hide after timeout
+        setTimeout(() => t.classList.remove('visible'), timeout);
+        setTimeout(() => t.remove(), timeout + 300);
+      }
+
+      // small in-page settings (toast enable/position/timeout/sound)
+      const chatSettingsKey = 'liaplus.chat.settings:v1';
+      function defaultSettings() {
+        return { toastEnabled: true, toastPos: 'bottom-right', toastTimeout: 4200, soundEnabled: false };
+      }
+      function loadSettings() {
+        try { return Object.assign(defaultSettings(), JSON.parse(localStorage.getItem(chatSettingsKey) || '{}')); } catch(e) { return defaultSettings(); }
+      }
+      function saveSettings(s) { localStorage.setItem(chatSettingsKey, JSON.stringify(s)); }
+
+      // create a small settings toggle UI
+      (function createSettingsUI(){
+        const s = loadSettings();
+        const btn = document.createElement('button');
+        btn.className = 'settings-gear';
+        btn.setAttribute('aria-label','Chat settings');
+        btn.title = 'Chat settings';
+        btn.innerHTML = '⚙️';
+        document.body.appendChild(btn);
+
+        const panel = document.createElement('div');
+        panel.className = 'settings-panel';
+        panel.innerHTML = `
+          <label><input type="checkbox" data-key="toastEnabled"> Enable toast</label>
+          <label>Position: <select data-key="toastPos"><option value="bottom-right">Bottom right</option><option value="bottom-left">Bottom left</option><option value="top-right">Top right</option></select></label>
+          <label>Timeout ms: <input type="number" data-key="toastTimeout" min="800" step="100" style="width:5.5rem"></label>
+          <label><input type="checkbox" data-key="soundEnabled"> Play sound on reply</label>
+          <div style="margin-top:0.5rem"><button class="btn-sm btn btn-primary save-settings">Save</button> <button class="btn-sm btn btn-secondary cancel-settings">Close</button></div>
+        `;
+        document.body.appendChild(panel);
+        // populate
+        panel.querySelector('[data-key="toastEnabled"]').checked = !!s.toastEnabled;
+        panel.querySelector('[data-key="toastPos"]').value = s.toastPos;
+        panel.querySelector('[data-key="toastTimeout"]').value = s.toastTimeout;
+        panel.querySelector('[data-key="soundEnabled"]').checked = !!s.soundEnabled;
+
+        btn.addEventListener('click', () => panel.classList.toggle('open'));
+        panel.querySelector('.cancel-settings').addEventListener('click', () => panel.classList.remove('open'));
+        panel.querySelector('.save-settings').addEventListener('click', () => {
+          const ns = {
+            toastEnabled: !!panel.querySelector('[data-key="toastEnabled"]').checked,
+            toastPos: panel.querySelector('[data-key="toastPos"]').value,
+            toastTimeout: parseInt(panel.querySelector('[data-key="toastTimeout"]').value,10) || 4200,
+            soundEnabled: !!panel.querySelector('[data-key="soundEnabled"]').checked
+          };
+          saveSettings(ns);
+          panel.classList.remove('open');
+        });
+      })();
+
+      // play a short beep using WebAudio
+      function playBeep() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'sine'; o.frequency.value = 880;
+          g.gain.value = 0.0001;
+          o.connect(g); g.connect(ctx.destination);
+          o.start();
+          // ramp up and down
+          g.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.01);
+          g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+          setTimeout(() => { try { o.stop(); ctx.close(); } catch(e){} }, 300);
+        } catch (e) {
+          // ignore audio errors
+        }
       }
 
       if (form && input) {
-        // prevent normal submit and use fetch
+        // prevent normal submit and use fetch with JSON
         form.addEventListener('submit', async function (e) {
           e.preventDefault();
           const text = input.value.trim();
@@ -171,18 +249,28 @@
           input.value = '';
 
           try {
-            const fd = new FormData();
-            fd.append('message', text);
-            const resp = await fetch(form.action, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd });
+            const payload = { message: text };
+            const resp = await fetch(form.action, {
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
             if (!resp.ok) {
               // fallback: reload page
               window.location = '/';
               return;
             }
             const data = await resp.json();
-            // append bot reply
+            // append bot reply (server returns {bot:{text,model,ts}})
             const bot = data.bot || {};
             await appendMessageToDOM('bot', bot.text || 'No reply', bot.ts || new Date().toISOString(), bot.model || '');
+            // play beep or toast depending on settings
+            const s = loadSettings();
+            if (s.soundEnabled) playBeep();
+            // If toast is enabled, show a toast (showToast checks setting again)
+            if (s.toastEnabled) {
+              showToast(bot.text ? ('Bot: ' + (bot.text.length>120?bot.text.slice(0,120)+'…':bot.text)) : 'Bot replied', s.toastPos, s.toastTimeout);
+            }
           } catch (err) {
             console.error('Chat AJAX error', err);
             // reload fallback
