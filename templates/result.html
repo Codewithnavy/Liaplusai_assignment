@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Conversation Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="container py-4">
+      <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+          <h4 class="mb-0">Conversation Sentiment Report</h4>
+        </div>
+        <div class="card-body">
+          <h5>Overall: <span class="badge bg-info text-dark">{{ report.overall.label }}</span></h5>
+          <p>Compound score: {{ '%.3f'|format(report.overall.compound) }}</p>
+          <p>Trend: <strong>{{ report.trend }}</strong></p>
+
+          <hr />
+          <h6>Message-level Sentiments</h6>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>#</th><th>Message</th><th>Sentiment</th><th>Compound</th></tr>
+            </thead>
+            <tbody>
+              {% for i, m in enumerate(report.per_message) %}
+                <tr>
+                  <td>{{ i+1 }}</td>
+                  <td style="max-width:50ch; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ m.text }}</td>
+                  <td>{{ m.label }}</td>
+                  <td>{{ '%.3f'|format(m.compound) }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <canvas id="trendChart" height="80"></canvas>
+
+          <div class="mt-3">
+            <a href="/" class="btn btn-primary">Start New Conversation</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const compounds = {{ report.per_message | map(attribute='compound') | list | tojson }};
+      const labels = compounds.map((_, i) => 'Msg ' + (i+1));
+      const ctx = document.getElementById('trendChart');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'line',
+          data: { labels: labels, datasets: [{ label: 'Compound', data: compounds, borderColor: 'rgb(75, 192, 192)', tension: 0.3 }] },
+          options: { scales: { y: { min: -1, max: 1 } } }
+        });
+      }
+    </script>
+  </body>
+</html>

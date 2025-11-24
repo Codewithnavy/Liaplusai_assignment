@@ -1,0 +1,10 @@
+.chat-body { height: 400px; overflow:auto; padding: 1rem; background: linear-gradient(180deg,#f8f9fa,#eef2f6); }
+.avatar { width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-weight:600; color:#fff }
+.avatar.user { background:#0d6efd }
+.avatar.bot { background:#6c757d }
+.bubble { max-width:70%; padding:0.6rem 0.9rem; border-radius:10px; }
+.user-bubble { background:#e9f2ff; margin-left:0.5rem }
+.bot-bubble { background:#f1f3f5; margin-right:0.5rem }
+
+body { background: #f1f5f9 }
+.card { border-radius:12px }
