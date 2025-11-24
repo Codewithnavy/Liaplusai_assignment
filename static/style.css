@@ -9,3 +9,6 @@
 
 body { background: #f1f5f9 }
 .card { border-radius:12px }
+
+.badge.llm-available { background:#28a745; color:#fff }
+.badge.llm-unavailable { background:#dc3545; color:#fff }
