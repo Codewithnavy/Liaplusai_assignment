@@ -40,7 +40,9 @@ def message():
     history = session.get("history", [])
     history.append({"role": "user", "text": user_text})
     # Try LLM first, then fallback to local rule-based reply
-    bot_reply = generate_reply_via_llm(history, user_text)
+    api_key = os.environ.get("OPENAI_API_KEY")
+    model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
+    bot_reply = generate_reply_via_llm(history, user_text, api_key=api_key, model=model)
     if not bot_reply or bot_reply.startswith("(LLM") or bot_reply.startswith("(LLM error"):
         bot_reply = generate_reply_fallback(user_text)
     history.append({"role": "bot", "text": bot_reply})
