@@ -34,5 +34,5 @@ jobs:
             echo "OPENAI_API_KEY not set — skipping LLM smoke test"
             exit 0
           fi
-          python -u scripts/llm_smoke_test.py
+          python -u scripts/llm_smoke.py
 
