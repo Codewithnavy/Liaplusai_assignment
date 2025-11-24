@@ -1,14 +1,42 @@
-.chat-body { height: 400px; overflow:auto; padding: 1rem; background: linear-gradient(180deg,#f8f9fa,#eef2f6); }
-.avatar { width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-weight:600; color:#fff }
-.avatar.user { background:#0d6efd }
-.avatar.bot { background:#6c757d }
-.bubble { max-width:70%; padding:0.6rem 0.9rem; border-radius:10px; }
-.user-bubble { background:#e9f2ff; margin-left:0.5rem }
-.bot-bubble { background:#f1f3f5; margin-right:0.5rem }
+.chat-body { height: 60vh; max-height: 520px; overflow:auto; padding: 1rem; background: linear-gradient(180deg,#f8f9fa,#eef2f6); display:flex; flex-direction:column; gap:0.75rem }
+.avatar { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:8px; font-weight:700; color:#fff; flex-shrink:0 }
+.avatar.user { background:linear-gradient(135deg,#2b8cff,#0d6efd) }
+.avatar.bot { background:linear-gradient(135deg,#6c757d,#495057) }
+.bubble { max-width:72%; padding:0.75rem 1rem; border-radius:14px; box-shadow: 0 6px 18px rgba(14,30,37,0.06); }
+.user-bubble { background:#e9f6ff; margin-left:0.6rem; color:#04204a }
+.bot-bubble { background:#ffffff; margin-right:0.6rem; color:#0b1730 }
+.message-text { white-space:pre-wrap; word-break:break-word }
 .small.text-muted { font-size: 0.72rem; }
 
-body { background: #f1f5f9 }
-.card { border-radius:12px }
+body { background: #f1f5f9; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial }
+.card { border-radius:14px }
+
+.model-badge { font-size:0.66rem; padding:0.25rem 0.45rem }
 
 .badge.llm-available { background:#28a745; color:#fff }
 .badge.llm-unavailable { background:#dc3545; color:#fff }
+
+/* Footer buttons spacing for small screens */
+@media (max-width:576px) {
+	.card-footer .form-control { min-width: 0; }
+	.card-footer .btn { font-size:0.85rem; padding:0.45rem 0.6rem }
+}
+
+/* Make sure chat bubbles align nicely */
+.chat-body .d-flex { align-items:flex-start }
+
+.card-header h4 { letter-spacing: 0.2px }
+
+.bot-bubble .model-badge { background: rgba(0,0,0,0.04); border-radius:6px }
+
+/* Accessibility helpers */
+.visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap }
+.visually-hidden-focusable:active, .visually-hidden-focusable:focus { position: static; height: auto; width: auto; overflow: visible; clip: auto; white-space: normal }
+
+/* Skip link */
+.skip-link { position: absolute; left: -999px; top: auto; width: 1px; height: 1px; overflow: hidden }
+.skip-link:focus, .skip-link:active { position: static; left: 1rem; top: 1rem; width: auto; height: auto; padding: 0.5rem 0.75rem; background: #0d6efd; color: #fff; border-radius: 6px; z-index: 9999 }
+
+/* Focus styles for keyboard users */
+.bubble:focus { outline: 3px solid rgba(13,110,253,0.25); outline-offset: 2px }
+.btn:focus { box-shadow: 0 0 0 0.15rem rgba(13,110,253,0.25) }

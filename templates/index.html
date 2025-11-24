@@ -9,6 +9,7 @@
   </head>
   <body>
     <div class="container py-4">
+      <a class="skip-link" href="#chat">Skip to chat</a>
       <div class="card shadow-lg">
           <div class="card-header bg-primary text-white">
           <div class="d-flex justify-content-between align-items-center">
@@ -29,29 +30,33 @@
             </div>
           </div>
         </div>
-        <div class="card-body chat-body" id="chat">
+        <div class="card-body chat-body" id="chat" role="log" aria-live="polite" tabindex="0">
           {% if history %}
             {% for msg in history %}
               {% if msg.role == 'user' %}
-                <div class="d-flex mb-3">
-                  <div class="avatar user">You</div>
-                  <div class="bubble user-bubble">{{ msg.text }}
+                <div class="d-flex mb-3 align-items-start">
+                  <div class="avatar user" aria-hidden="true">You</div>
+                  <div class="bubble user-bubble" role="article" tabindex="0" aria-label="User message at {{ msg.ts }}">
+                    <div class="message-text">{{ msg.text }}</div>
                     {% if msg.ts %}
-                      <div class="small text-muted mt-1">{{ msg.ts }}</div>
+                      <div class="small text-muted mt-1 ts" data-iso="{{ msg.ts }}">{{ msg.ts }}</div>
                     {% endif %}
                   </div>
                 </div>
               {% else %}
-                <div class="d-flex mb-3 justify-content-end align-items-end">
-                  <div class="bubble bot-bubble">{{ msg.text }}
-                    {% if msg.model %}
-                      <div class="small text-muted mt-1">Model: {{ msg.model }}</div>
-                    {% endif %}
-                    {% if msg.ts %}
-                      <div class="small text-muted mt-1">{{ msg.ts }}</div>
-                    {% endif %}
+                <div class="d-flex mb-3 justify-content-end align-items-start">
+                  <div class="bubble bot-bubble" role="article" tabindex="0" aria-label="Bot message at {{ msg.ts }}">
+                    <div class="message-text">{{ msg.text }}</div>
+                    <div class="d-flex gap-2 align-items-center mt-1">
+                      {% if msg.model %}
+                        <span class="badge bg-light text-dark model-badge" role="status" aria-label="Model {{ msg.model }}">{{ msg.model }}</span>
+                      {% endif %}
+                      {% if msg.ts %}
+                        <div class="small text-muted ts" data-iso="{{ msg.ts }}">{{ msg.ts }}</div>
+                      {% endif %}
+                    </div>
                   </div>
-                  <div class="avatar bot">Bot</div>
+                  <div class="avatar bot" aria-hidden="true">Bot</div>
                 </div>
               {% endif %}
             {% endfor %}
@@ -60,13 +65,12 @@
           {% endif %}
         </div>
         <div class="card-footer">
-          <form action="/message" method="post" class="d-flex gap-2">
-            <input name="message" class="form-control" placeholder="Type your message" autocomplete="off" />
-            <button class="btn btn-primary">Send</button>
-            <form action="/end" method="post"></form>
-            <form action="/end" method="post">
-              <button class="btn btn-outline-secondary" type="submit">End Conversation</button>
-            </form>
+          <form id="message-form" action="/message" method="post" class="d-flex gap-2 align-items-center">
+            <label for="message-input" class="visually-hidden">Message</label>
+            <input id="message-input" name="message" class="form-control" placeholder="Type your message" autocomplete="off" aria-label="Message" />
+            <button class="btn btn-primary" type="submit" aria-label="Send message">Send</button>
+            <button class="btn btn-outline-secondary" type="submit" formaction="/end" formmethod="post" aria-label="End conversation">End Conversation</button>
+            <button class="btn btn-outline-danger" type="submit" formaction="/clear" formmethod="post" aria-label="Clear conversation">Clear</button>
           </form>
           <div class="mt-2">
             <a class="btn btn-sm btn-light" href="/settings">Configure API Key & Model</a>
@@ -81,4 +85,39 @@
       </div>
     </div>
   </body>
+  <script>
+    // Auto-scroll chat to bottom, format timestamps, and add keyboard submit behavior
+    (function(){
+      const chat = document.getElementById('chat');
+      if (chat) {
+        // Move focus into chat for screen readers
+        chat.focus();
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      // Friendly timestamp formatting for ISO strings
+      document.querySelectorAll('.ts').forEach(el => {
+        try {
+          const iso = el.dataset.iso;
+          if (!iso) return;
+          const dt = new Date(iso);
+          el.textContent = dt.toLocaleString();
+        } catch (e) {
+          // ignore
+        }
+      });
+
+      // Submit on Enter (prevent accidental newlines if using a textarea later)
+      const form = document.getElementById('message-form');
+      const input = document.getElementById('message-input');
+      if (form && input) {
+        input.addEventListener('keydown', function(e){
+          if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            form.submit();
+          }
+        });
+      }
+    })();
+  </script>
 </html>
