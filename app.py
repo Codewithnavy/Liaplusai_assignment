@@ -31,6 +31,22 @@ def settings():
     return render_template("settings.html", model=current_model)
 
 
+@app.route("/status", methods=["GET"])
+def status():
+    """Return a simple status page showing model & LLM availability."""
+    model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
+    key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_KEY")
+    llm_lib = False
+    try:
+        import openai as _openai  # noqa: F401
+        llm_lib = True
+    except Exception:
+        llm_lib = False
+
+    available = llm_lib and bool(key)
+    return render_template("status.html", model=model, available=available, has_key=bool(key), llm_lib=llm_lib)
+
+
 @app.route("/message", methods=["POST"])
 def message():
     user_text = request.form.get("message", "").strip()
@@ -43,9 +59,13 @@ def message():
     api_key = os.environ.get("OPENAI_API_KEY")
     model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
     bot_reply = generate_reply_via_llm(history, user_text, api_key=api_key, model=model)
+    used_model = None
     if not bot_reply or bot_reply.startswith("(LLM") or bot_reply.startswith("(LLM error"):
         bot_reply = generate_reply_fallback(user_text)
-    history.append({"role": "bot", "text": bot_reply})
+        used_model = "fallback"
+    else:
+        used_model = model
+    history.append({"role": "bot", "text": bot_reply, "model": used_model})
 
     session["history"] = history
     return redirect(url_for("index"))
