@@ -27,8 +27,12 @@
                   <div class="bubble user-bubble">{{ msg.text }}</div>
                 </div>
               {% else %}
-                <div class="d-flex mb-3 justify-content-end">
-                  <div class="bubble bot-bubble">{{ msg.text }}</div>
+                <div class="d-flex mb-3 justify-content-end align-items-end">
+                  <div class="bubble bot-bubble">{{ msg.text }}
+                    {% if msg.model %}
+                      <div class="small text-muted mt-1">Model: {{ msg.model }}</div>
+                    {% endif %}
+                  </div>
                   <div class="avatar bot">Bot</div>
                 </div>
               {% endif %}
