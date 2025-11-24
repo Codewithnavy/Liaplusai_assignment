@@ -29,8 +29,8 @@ body { background: #f1f5f9; font-family: Inter, system-ui, -apple-system, "Segoe
 
 .bot-bubble .model-badge { background: rgba(0,0,0,0.04); border-radius:6px }
 
-/* Debug banner used briefly to highlight last bot reply during troubleshooting */
-#debug-banner { position: fixed; right: 18px; top: 76px; background:#0d6efd; color:#fff; padding:0.5rem 0.75rem; border-radius:8px; box-shadow:0 6px 16px rgba(13,110,253,0.18); z-index:99999; transition: opacity 0.5s ease }
+/* Transient 'New' badge for incoming replies */
+.new-badge { display:inline-block; margin-left:0.6rem; background:#28a745; color:#fff; font-size:0.65rem; padding:0.15rem 0.4rem; border-radius:6px; vertical-align:middle; transition: opacity 0.4s ease }
 
 /* Accessibility helpers */
 .visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap }

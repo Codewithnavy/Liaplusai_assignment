@@ -59,6 +59,12 @@ def status():
     return render_template("status.html", model=model, available=available, has_key=bool(key), llm_lib=llm_lib)
 
 
+@app.route("/troubleshoot", methods=["GET"])
+def troubleshoot():
+    """Simple troubleshooting page with quick checks."""
+    return render_template("troubleshoot.html")
+
+
 @app.route("/message", methods=["POST"])
 def message():
     user_text = request.form.get("message", "").strip()

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Troubleshoot — Liaplus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <div class="container py-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white"><strong>Troubleshooting</strong></div>
+        <div class="card-body">
+          <p>If messages are not appearing, follow these checks:</p>
+          <ol>
+            <li><strong>Server logs:</strong> In the terminal running <code>python app.py</code> look for lines like <code>[chat] user='...' bot_reply='...' used_model='fallback'</code>.</li>
+            <li><strong>Status page:</strong> Open <a href="/status">/status</a> to confirm whether an OpenAI key is configured and the client library is available.</li>
+            <li><strong>Network / DevTools:</strong> Open Browser DevTools → Network. Submit a message and inspect the POST <code>/message</code> and the following GET <code>/</code> response HTML. Search that response for your message and the bot reply.</li>
+            <li><strong>Session / Clear:</strong> The conversation is stored in session. Use the <code>Clear Conversation</code> button to reset and retry.</li>
+          </ol>
+          <p>If you need help, copy the relevant server log lines and paste them into the chat so I can help interpret them.</p>
+          <div class="mt-3">
+            <a href="/" class="btn btn-primary">Back to chat</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

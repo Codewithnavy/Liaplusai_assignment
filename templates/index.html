@@ -72,8 +72,9 @@
             <button class="btn btn-outline-secondary" type="submit" formaction="/end" formmethod="post" aria-label="End conversation">End Conversation</button>
             <button class="btn btn-outline-danger" type="submit" formaction="/clear" formmethod="post" aria-label="Clear conversation">Clear</button>
           </form>
-          <div class="mt-2">
+          <div class="mt-2 d-flex gap-2 align-items-center">
             <a class="btn btn-sm btn-light" href="/settings">Configure API Key & Model</a>
+            <a class="btn btn-sm btn-outline-secondary" href="/troubleshoot">Troubleshooting</a>
           </div>
         </div>
       </div>
@@ -109,21 +110,36 @@
         }
       });
 
-      // Show temporary debug banner with last bot reply (helps make replies obvious)
+      // Observe chat container for new messages and scroll into view.
       try {
-        const lastBot = document.querySelector('.bot-bubble:last-of-type .message-text');
-        if (lastBot && lastBot.textContent.trim()) {
-          const banner = document.createElement('div');
-          banner.id = 'debug-banner';
-          banner.textContent = 'Last reply: ' + lastBot.textContent.trim();
-          document.body.appendChild(banner);
-          setTimeout(() => {
-            banner.style.opacity = '0';
-            setTimeout(() => banner.remove(), 600);
-          }, 3000);
+        if (chat) {
+          const observer = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+              if (m.addedNodes && m.addedNodes.length) {
+                // scroll smoothly to the latest message
+                const last = chat.querySelector('.bubble:last-of-type');
+                if (last) {
+                  last.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                  // show a tiny transient 'New' badge on the last bot bubble if present
+                  const botBubble = chat.querySelector('.bot-bubble:last-of-type');
+                  if (botBubble) {
+                    const nb = document.createElement('span');
+                    nb.className = 'new-badge';
+                    nb.textContent = 'New';
+                    botBubble.appendChild(nb);
+                    setTimeout(() => {
+                      nb.style.opacity = '0';
+                      setTimeout(() => nb.remove(), 400);
+                    }, 1800);
+                  }
+                }
+              }
+            }
+          });
+          observer.observe(chat, { childList: true, subtree: true });
         }
       } catch (e) {
-        // ignore
+        // ignore observer errors
       }
 
       // Submit on Enter (prevent accidental newlines if using a textarea later)
