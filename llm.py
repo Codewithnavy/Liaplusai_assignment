@@ -12,6 +12,11 @@ def _get_api_key():
     return os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_KEY")
 
 
+def _get_model():
+    # allow configurable model via env var
+    return os.environ.get("OPENAI_MODEL", os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"))
+
+
 def generate_reply_via_llm(history: List[Dict[str, str]], user_text: str) -> str:
     """Generate a reply using the configured OpenAI key. Returns a fallback reply if unavailable."""
     api_key = _get_api_key()
@@ -33,12 +38,19 @@ def generate_reply_via_llm(history: List[Dict[str, str]], user_text: str) -> str
     # add the current user turn explicitly
     messages.append({"role": "user", "content": user_text})
 
+    model = _get_model()
     try:
-        resp = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages, max_tokens=150, temperature=0.7)
+        # support multiple SDK shapes — use ChatCompletion for backward compat
+        resp = openai.ChatCompletion.create(model=model, messages=messages, max_tokens=150, temperature=0.7)
         choice = resp.get("choices", [])[0]
         return choice.get("message", {}).get("content", "")
     except Exception:
-        return "(LLM error) " + "Thanks for sharing — tell me more or press End Conversation when done."
+        try:
+            # try the newer client API (if using openai 1.x where ChatCompletion is different)
+            completion = openai.chat.completions.create(model=model, messages=messages, max_tokens=150, temperature=0.7)
+            return completion.choices[0].message.content
+        except Exception:
+            return "(LLM error) " + "Thanks for sharing — tell me more or press End Conversation when done."
 import os
 from typing import List, Dict
 

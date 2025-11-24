@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from sentiment import analyze_text, conversation_sentiment
 from llm import generate_reply_via_llm
 import os
+from flask import flash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "change-me-for-production")
@@ -11,6 +12,23 @@ app.secret_key = os.environ.get("FLASK_SECRET", "change-me-for-production")
 def index():
     history = session.get("history", [])
     return render_template("index.html", history=history)
+
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    if request.method == "POST":
+        api_key = request.form.get("api_key", "").strip()
+        model = request.form.get("model", "gpt-3.5-turbo").strip()
+        if api_key:
+            # set for current process only; do not persist to disk
+            os.environ["OPENAI_API_KEY"] = api_key
+        if model:
+            os.environ["OPENAI_MODEL"] = model
+        flash("Settings updated for this running instance.", "success")
+        return redirect(url_for("settings"))
+
+    current_model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
+    return render_template("settings.html", model=current_model)
 
 
 @app.route("/message", methods=["POST"])
