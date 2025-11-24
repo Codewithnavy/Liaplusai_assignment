@@ -30,6 +30,13 @@ LLM (OpenAI) integration
 Remote repository
 - This project will be pushed to `https://github.com/Codewithnavy/Liaplusai_assignment.git` per the target repository for the assignment.
 
+CI Status
+- The repository includes a GitHub Actions workflow at `.github/workflows/ci.yml` that runs tests on pushes to `main`. After pushing, check the Actions tab to view run logs.
+
+Quick links (after push)
+- Actions: https://github.com/Codewithnavy/Liaplusai_assignment/actions
+- Repo: https://github.com/Codewithnavy/Liaplusai_assignment
+
 
 Design & sentiment logic
 - Each user message is analyzed by NLTK VADER when available. A compound score is used to label messages: compound >= 0.05 is Positive, <= -0.05 is Negative, otherwise Neutral.
