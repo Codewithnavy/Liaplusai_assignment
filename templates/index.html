@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
+    <div id="sr-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
     <div class="container py-4">
       <a class="skip-link" href="#chat">Skip to chat</a>
       <div class="card shadow-lg">
@@ -148,6 +149,10 @@
         // show toast for bot replies
         if (who === 'bot') {
           try { showToast('Bot: ' + (text.length > 80 ? text.slice(0,80) + '…' : text)); } catch(e){}
+          try {
+            const sr = document.getElementById('sr-live');
+            if (sr) sr.textContent = 'Bot: ' + (text.length > 200 ? text.slice(0,200) + '…' : text);
+          } catch (e) {}
         }
       }
 
