@@ -25,4 +25,11 @@ jobs:
       - name: Run tests
         run: |
           python -m pytest -q
+      - name: LLM smoke test (only if secret set)
+        if: ${{ secrets.OPENAI_API_KEY }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        run: |
+          python -u scripts/llm_smoke_test.py
 
