@@ -12,7 +12,18 @@ app.secret_key = os.environ.get("FLASK_SECRET", "change-me-for-production")
 @app.route("/", methods=["GET"])
 def index():
     history = session.get("history", [])
-    return render_template("index.html", history=history)
+    # compute model and LLM availability for header indicator
+    model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
+    key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_KEY")
+    llm_lib = False
+    try:
+        import openai as _openai  # noqa: F401
+        llm_lib = True
+    except Exception:
+        llm_lib = False
+
+    available = llm_lib and bool(key)
+    return render_template("index.html", history=history, model=model, llm_available=available)
 
 
 @app.route("/settings", methods=["GET", "POST"])

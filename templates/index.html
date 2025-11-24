@@ -14,7 +14,14 @@
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <h4 class="mb-0">Liaplus — Chat & Sentiment</h4>
-              <div class="small text-light">Model: {{ (request.environ.get('OPENAI_MODEL') or request.environ.get('OPENAI_API_KEY') and (request.environ.get('OPENAI_MODEL') or 'gpt-3.5-turbo')) or 'not configured' }}</div>
+              <div class="d-flex gap-2 align-items-center">
+                <div class="small text-light">Model: {{ model }}</div>
+                {% if llm_available %}
+                  <span class="badge llm-available">LLM available</span>
+                {% else %}
+                  <span class="badge llm-unavailable">LLM unavailable</span>
+                {% endif %}
+              </div>
             </div>
             <div class="d-flex gap-2 align-items-center">
               <a href="/status" class="btn btn-sm btn-outline-light">Status</a>
