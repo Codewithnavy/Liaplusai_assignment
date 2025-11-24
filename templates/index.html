@@ -142,14 +142,59 @@
         // ignore observer errors
       }
 
-      // Submit on Enter (prevent accidental newlines if using a textarea later)
+      // Submit on Enter and support AJAX submit to show replies immediately
       const form = document.getElementById('message-form');
       const input = document.getElementById('message-input');
+      async function appendMessageToDOM(who, text, ts, model) {
+        const wrap = document.createElement('div');
+        if (who === 'user') {
+          wrap.className = 'd-flex mb-3 align-items-start';
+          wrap.innerHTML = `<div class="avatar user" aria-hidden="true">You</div><div class="bubble user-bubble" role="article" tabindex="0" aria-label="User message at ${ts}"><div class="message-text">${text}</div><div class="small text-muted mt-1">${new Date(ts).toLocaleString()}</div></div>`;
+        } else {
+          wrap.className = 'd-flex mb-3 justify-content-end align-items-start';
+          wrap.innerHTML = `<div class="bubble bot-bubble" role="article" tabindex="0" aria-label="Bot message at ${ts}"><div class="message-text">${text}</div><div class="d-flex gap-2 align-items-center mt-1">${model?`<span class="badge bg-light text-dark model-badge">${model}</span>`:''}<div class="small text-muted">${new Date(ts).toLocaleString()}</div></div></div><div class="avatar bot" aria-hidden="true">Bot</div>`;
+        }
+        chat.appendChild(wrap);
+        // small delay then scroll
+        setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 40);
+      }
+
       if (form && input) {
+        // prevent normal submit and use fetch
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const text = input.value.trim();
+          if (!text) return;
+          // append user message immediately
+          const now = new Date().toISOString();
+          await appendMessageToDOM('user', text, now);
+          input.value = '';
+
+          try {
+            const fd = new FormData();
+            fd.append('message', text);
+            const resp = await fetch(form.action, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd });
+            if (!resp.ok) {
+              // fallback: reload page
+              window.location = '/';
+              return;
+            }
+            const data = await resp.json();
+            // append bot reply
+            const bot = data.bot || {};
+            await appendMessageToDOM('bot', bot.text || 'No reply', bot.ts || new Date().toISOString(), bot.model || '');
+          } catch (err) {
+            console.error('Chat AJAX error', err);
+            // reload fallback
+            window.location = '/';
+          }
+        });
+
+        // also submit on Enter
         input.addEventListener('keydown', function(e){
           if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
             e.preventDefault();
-            form.submit();
+            form.requestSubmit();
           }
         });
       }
