@@ -27,6 +27,9 @@ LLM (OpenAI) integration
 - Set your OpenAI API key in the environment variable `OPENAI_API_KEY` or copy `.env.example` to `.env` and update the key.
 - The app will use the OpenAI Chat API to generate more natural chatbot replies when the key is available. The repository never stores your secret key — do not commit it.
 
+Remote repository
+- This project will be pushed to `https://github.com/Codewithnavy/Liaplusai_assignment.git` per the target repository for the assignment.
+
 
 Design & sentiment logic
 - Each user message is analyzed by NLTK VADER when available. A compound score is used to label messages: compound >= 0.05 is Positive, <= -0.05 is Negative, otherwise Neutral.
