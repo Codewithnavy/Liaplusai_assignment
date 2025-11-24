@@ -1,5 +1,7 @@
 # Chatbot with Conversation-Level Sentiment Analysis
 
+[![CI](https://github.com/Codewithnavy/Liaplusai_assignment/actions/workflows/ci.yml/badge.svg)](https://github.com/Codewithnavy/Liaplusai_assignment/actions)
+
 This project implements a simple chatbot with conversation-level sentiment analysis (Tier 1) and per-message sentiment (Tier 2).
 
 **Status**
