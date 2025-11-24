@@ -5,7 +5,8 @@ import openai
 MODEL = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
 KEY = os.environ.get("OPENAI_API_KEY")
 if not KEY:
-    raise SystemExit("OPENAI_API_KEY not set")
+    print("OPENAI_API_KEY not set — exiting with code 2")
+    raise SystemExit(2)
 openai.api_key = KEY
 
 resp = openai.ChatCompletion.create(model=MODEL, messages=[{"role":"user","content":"Say 'pong'"}], max_tokens=10)
