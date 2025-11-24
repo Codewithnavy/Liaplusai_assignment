@@ -51,6 +51,38 @@ def generate_reply_via_llm(history: List[Dict[str, str]], user_text: str) -> str
             return completion.choices[0].message.content
         except Exception:
             return "(LLM error) " + "Thanks for sharing — tell me more or press End Conversation when done."
+def generate_reply_via_llm(history: List[Dict[str, str]], user_text: str, api_key: str = None, model: str = "gpt-3.5-turbo") -> str:
+    """Generate a reply using provided OpenAI key (or env). Returns fallback when unavailable.
+
+    Parameters:
+    - history: conversation history list
+    - user_text: current user content
+    - api_key: optional explicit API key (preferred)
+    - model: model name to call (e.g. 'gpt-3.5-turbo', 'gpt-4', 'gpt-5')
+    """
+    # prefer explicit api_key then environment
+    key = api_key or os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_KEY")
+    if not openai or not key:
+        return "(LLM unavailable) " + "Thanks for sharing — tell me more or press End Conversation when done."
+
+    openai.api_key = key
+
+    system_prompt = "You are a helpful friendly assistant that answers concisely."
+    messages = [{"role": "system", "content": system_prompt}]
+
+    recent = history[-8:] if len(history) > 8 else history
+    for entry in recent:
+        role = "user" if entry.get("role") == "user" else "assistant"
+        messages.append({"role": role, "content": entry.get("text", "")})
+
+    messages.append({"role": "user", "content": user_text})
+
+    try:
+        resp = openai.ChatCompletion.create(model=model, messages=messages, max_tokens=300, temperature=0.7)
+        choice = resp.get("choices", [])[0]
+        return choice.get("message", {}).get("content", "").strip()
+    except Exception:
+        return "(LLM error) " + "Thanks for sharing — tell me more or press End Conversation when done."
 import os
 from typing import List, Dict
 
