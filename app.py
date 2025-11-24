@@ -79,6 +79,11 @@ def message():
         used_model = "fallback"
     else:
         used_model = model
+    # Log the produced reply for debugging (appears in the server console)
+    try:
+        app.logger.info(f"[chat] user={user_text!r} bot_reply={bot_reply!r} used_model={used_model!r}")
+    except Exception:
+        print(f"[chat] user={user_text!r} bot_reply={bot_reply!r} used_model={used_model!r}")
     history.append({"role": "bot", "text": bot_reply, "model": used_model, "ts": datetime.utcnow().isoformat() + "Z"})
 
     session["history"] = history
