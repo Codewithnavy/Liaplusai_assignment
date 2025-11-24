@@ -4,6 +4,7 @@ from llm import generate_reply_via_llm
 import os
 from flask import flash
 from datetime import datetime
+import random
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "change-me-for-production")
@@ -108,6 +109,16 @@ def message():
 
 def generate_reply_fallback(user_text: str) -> str:
     lowered = user_text.lower()
+    # common greeting detection
+    greetings = ["hi", "hello", "hey", "hey there", "good morning", "good afternoon", "good evening"]
+    if any(lowered == g or lowered.startswith(g + " ") or (g in lowered and len(lowered.split())<=3) for g in greetings):
+        options = [
+            "Hi — how are you? How can I assist you today?",
+            "Hello! I'm here to help — how can I assist you?",
+            "Hey there — what can I do for you today?",
+            "Hi! Hope you're well. How can I help?"
+        ]
+        return random.choice(options)
     if any(w in lowered for w in ["help", "issue", "error", "problem"]):
         return "I'm sorry to hear that — can you tell me more so I can help?"
     if any(w in lowered for w in ["thanks", "thank you", "appreciate"]):
