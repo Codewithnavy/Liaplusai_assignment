@@ -26,9 +26,9 @@
               <tr><th>#</th><th>Message</th><th>Sentiment</th><th>Compound</th></tr>
             </thead>
             <tbody>
-              {% for i, m in enumerate(report.per_message) %}
+              {% for m in report.per_message %}
                 <tr>
-                  <td>{{ i+1 }}</td>
+                  <td>{{ loop.index }}</td>
                   <td style="max-width:50ch; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ m.text }}</td>
                   <td>{{ m.label }}</td>
                   <td>{{ '%.3f'|format(m.compound) }}</td>
