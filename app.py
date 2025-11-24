@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from sentiment import analyze_text, conversation_sentiment
+from llm import generate_reply_via_llm
 import os
 
 app = Flask(__name__)
@@ -20,15 +21,17 @@ def message():
 
     history = session.get("history", [])
     history.append({"role": "user", "text": user_text})
-
-    bot_reply = generate_reply(user_text)
+    # Try LLM first, then fallback to local rule-based reply
+    bot_reply = generate_reply_via_llm(history, user_text)
+    if not bot_reply or bot_reply.startswith("(LLM") or bot_reply.startswith("(LLM error"):
+        bot_reply = generate_reply_fallback(user_text)
     history.append({"role": "bot", "text": bot_reply})
 
     session["history"] = history
     return redirect(url_for("index"))
 
 
-def generate_reply(user_text: str) -> str:
+def generate_reply_fallback(user_text: str) -> str:
     lowered = user_text.lower()
     if any(w in lowered for w in ["help", "issue", "error", "problem"]):
         return "I'm sorry to hear that — can you tell me more so I can help?"
