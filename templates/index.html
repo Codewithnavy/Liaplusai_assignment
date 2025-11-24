@@ -86,13 +86,15 @@
     </div>
   </body>
   <script>
-    // Auto-scroll chat to bottom, format timestamps, and add keyboard submit behavior
+    // Auto-scroll chat to bottom, format timestamps, show a temporary debug banner,
+    // and keep keyboard submit behavior.
     (function(){
       const chat = document.getElementById('chat');
       if (chat) {
         // Move focus into chat for screen readers
         chat.focus();
-        chat.scrollTop = chat.scrollHeight;
+        // delayed scroll to handle rendering timing
+        setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 80);
       }
 
       // Friendly timestamp formatting for ISO strings
@@ -106,6 +108,23 @@
           // ignore
         }
       });
+
+      // Show temporary debug banner with last bot reply (helps make replies obvious)
+      try {
+        const lastBot = document.querySelector('.bot-bubble:last-of-type .message-text');
+        if (lastBot && lastBot.textContent.trim()) {
+          const banner = document.createElement('div');
+          banner.id = 'debug-banner';
+          banner.textContent = 'Last reply: ' + lastBot.textContent.trim();
+          document.body.appendChild(banner);
+          setTimeout(() => {
+            banner.style.opacity = '0';
+            setTimeout(() => banner.remove(), 600);
+          }, 3000);
+        }
+      } catch (e) {
+        // ignore
+      }
 
       // Submit on Enter (prevent accidental newlines if using a textarea later)
       const form = document.getElementById('message-form');
