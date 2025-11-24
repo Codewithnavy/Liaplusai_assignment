@@ -11,7 +11,12 @@
     <div class="container py-4">
       <div class="card shadow-lg">
         <div class="card-header bg-primary text-white">
-          <h4 class="mb-0">Liaplus — Chat & Sentiment</h4>
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Liaplus — Chat & Sentiment</h4>
+            <div>
+              <a href="/settings" class="btn btn-sm btn-outline-light">Settings</a>
+            </div>
+          </div>
         </div>
         <div class="card-body chat-body" id="chat">
           {% if history %}
