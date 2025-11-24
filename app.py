@@ -3,6 +3,7 @@ from sentiment import analyze_text, conversation_sentiment
 from llm import generate_reply_via_llm
 import os
 from flask import flash
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "change-me-for-production")
@@ -54,7 +55,9 @@ def message():
         return redirect(url_for("index"))
 
     history = session.get("history", [])
-    history.append({"role": "user", "text": user_text})
+    # attach an ISO timestamp for each message
+    ts = datetime.utcnow().isoformat() + "Z"
+    history.append({"role": "user", "text": user_text, "ts": ts})
     # Try LLM first, then fallback to local rule-based reply
     api_key = os.environ.get("OPENAI_API_KEY")
     model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
@@ -65,7 +68,7 @@ def message():
         used_model = "fallback"
     else:
         used_model = model
-    history.append({"role": "bot", "text": bot_reply, "model": used_model})
+    history.append({"role": "bot", "text": bot_reply, "model": used_model, "ts": datetime.utcnow().isoformat() + "Z"})
 
     session["history"] = history
     return redirect(url_for("index"))
@@ -88,6 +91,13 @@ def end_conversation():
     report = conversation_sentiment(history)
     session.pop("history", None)
     return render_template("result.html", report=report, history=history)
+
+
+@app.route("/clear", methods=["POST"])
+def clear_conversation():
+    session.pop("history", None)
+    flash("Conversation cleared.", "info")
+    return redirect(url_for("index"))
 
 
 if __name__ == "__main__":
