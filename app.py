@@ -69,6 +69,9 @@ def troubleshoot():
 def message():
     user_text = request.form.get("message", "").strip()
     if not user_text:
+        # if AJAX request, return JSON error
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return ({'error': 'empty_message'}, 400)
         return redirect(url_for("index"))
 
     history = session.get("history", [])
@@ -93,6 +96,13 @@ def message():
     history.append({"role": "bot", "text": bot_reply, "model": used_model, "ts": datetime.utcnow().isoformat() + "Z"})
 
     session["history"] = history
+    # If this is an AJAX request, return JSON with the new bot reply and timestamps
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+        return {
+            'user': {'text': user_text, 'ts': ts},
+            'bot': {'text': bot_reply, 'model': used_model, 'ts': datetime.utcnow().isoformat() + 'Z'}
+        }
+
     return redirect(url_for("index"))
 
 
