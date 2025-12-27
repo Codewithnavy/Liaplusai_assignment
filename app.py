@@ -3,6 +3,7 @@ from sentiment import analyze_text, conversation_sentiment
 from llm import generate_reply_via_llm
 import os
 from flask import flash
+from flask import jsonify
 from datetime import datetime
 import random
 
@@ -42,6 +43,61 @@ def settings():
 
     current_model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
     return render_template("settings.html", model=current_model)
+
+
+def _validate_openai_key(key: str, model: str):
+    try:
+        import openai
+    except Exception as e:
+        return {"status": "error", "message": "OpenAI library not installed"}
+
+    if not key:
+        return {"status": "missing_key", "message": "No key provided"}
+
+    model = model or os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
+    test_messages = [
+        {"role": "system", "content": "You are a short checker."},
+        {"role": "user", "content": "Say OK."},
+    ]
+
+    # Try old client then new client
+    try:
+        openai.api_key = key
+        resp = openai.ChatCompletion.create(
+            model=model,
+            messages=test_messages,
+            max_tokens=3,
+            temperature=0,
+        )
+        _ = resp.get("choices", [])[0]
+        return {"status": "ok", "message": "Key works"}
+    except Exception as e1:
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=key)
+            resp = client.chat.completions.create(
+                model=model,
+                messages=test_messages,
+                max_tokens=3,
+                temperature=0,
+            )
+            _ = resp.choices[0].message.content
+            return {"status": "ok", "message": "Key works"}
+        except Exception as e2:
+            msg = str(e2).lower()
+            if "invalid" in msg and "api key" in msg:
+                return {"status": "invalid", "message": "Invalid API key"}
+            if "quota" in msg or "insufficient" in msg or "rate limit" in msg:
+                return {"status": "quota", "message": "Insufficient quota or rate limit"}
+            return {"status": "error", "message": "OpenAI error: " + str(e2)}
+
+
+@app.route("/settings/validate", methods=["POST"])
+def validate_settings_key():
+    key = (request.json or {}).get("api_key") if request.is_json else request.form.get("api_key", "")
+    model = (request.json or {}).get("model") if request.is_json else request.form.get("model", "gpt-3.5-turbo")
+    result = _validate_openai_key(key.strip(), (model or "gpt-3.5-turbo").strip())
+    return jsonify(result)
 
 
 @app.route("/status", methods=["GET"])
