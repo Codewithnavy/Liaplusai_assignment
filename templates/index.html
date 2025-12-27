@@ -25,6 +25,13 @@
                 {% endif %}
               </div>
             </div>
+            {% if not llm_available %}
+              <div class="w-100 mt-2">
+                <div class="alert alert-warning mb-0 py-1" role="alert">
+                  The LLM is not available — replies use a local fallback. Add an API key in <a href="/settings">Settings</a>. If you still see this after adding a key, check <a href="/status">Status</a> for quota or key errors.
+                </div>
+              </div>
+            {% endif %}
             <div class="d-flex gap-2 align-items-center">
               <a href="/status" class="btn btn-sm btn-outline-light">Status</a>
               <a href="/settings" class="btn btn-sm btn-outline-light">Settings</a>
@@ -256,6 +263,17 @@
       if (form && input) {
         // prevent normal submit and use fetch with JSON
         form.addEventListener('submit', async function (e) {
+          // If the user clicked a button that targets /end or /clear, allow normal form submission
+          try {
+            const submitter = e.submitter;
+            const fa = submitter && (submitter.getAttribute('formaction') || submitter.formAction || '');
+            if (fa && (fa.indexOf('/end') !== -1 || fa.indexOf('/clear') !== -1)) {
+              // allow the browser to submit the form to the button's formaction
+              return;
+            }
+          } catch (err) {
+            // ignore and continue with AJAX
+          }
           e.preventDefault();
           const text = input.value.trim();
           if (!text) return;
