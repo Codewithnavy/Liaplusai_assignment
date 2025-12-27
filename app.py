@@ -85,7 +85,12 @@ def message():
     history = session.get("history", [])
     # attach an ISO timestamp for each message
     ts = datetime.utcnow().isoformat() + "Z"
-    history.append({"role": "user", "text": user_text, "ts": ts})
+    # analyze sentiment for this user message (per-message sentiment)
+    try:
+        sent = analyze_text(user_text)
+    except Exception:
+        sent = {"compound": 0.0, "label": "Neutral"}
+    history.append({"role": "user", "text": user_text, "ts": ts, "sentiment": sent})
     # Try LLM first, then fallback to local rule-based reply
     api_key = os.environ.get("OPENAI_API_KEY")
     model = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
@@ -108,7 +113,7 @@ def message():
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
         from flask import jsonify
         return jsonify({
-            'user': {'text': user_text, 'ts': ts},
+            'user': {'text': user_text, 'ts': ts, 'sentiment': sent},
             'bot': {'text': bot_reply, 'model': used_model, 'ts': datetime.utcnow().isoformat() + 'Z'}
         })
 

@@ -13,6 +13,11 @@ body { background: #f1f5f9; font-family: Inter, system-ui, -apple-system, "Segoe
 
 .model-badge { font-size:0.66rem; padding:0.25rem 0.45rem }
 
+.sentiment-badge { font-size:0.66rem; padding:0.2rem 0.45rem; border-radius:6px }
+.sentiment-badge.positive { background: #d1e7dd; color: #0f5132 }
+.sentiment-badge.negative { background: #f8d7da; color: #842029 }
+.sentiment-badge.neutral { background: #e2e3e5; color: #41464b }
+
 .badge.llm-available { background:#28a745; color:#fff }
 .badge.llm-unavailable { background:#dc3545; color:#fff }
 

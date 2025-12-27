@@ -1,17 +1,32 @@
 import math
 from typing import List, Dict, Any
 
-try:
-    from nltk.sentiment.vader import SentimentIntensityAnalyzer
-    import nltk
+# Lazily initialize VADER to avoid importing heavy nltk submodules at import time
+_analyzer = None
+
+def _get_analyzer():
+    global _analyzer
+    if _analyzer is not None:
+        return _analyzer
     try:
-        _ = SentimentIntensityAnalyzer()
+        from nltk.sentiment.vader import SentimentIntensityAnalyzer
+        # Try instantiating; if lexicon missing, we'll attempt a download
+        try:
+            _analyzer = SentimentIntensityAnalyzer()
+            return _analyzer
+        except Exception:
+            # attempt to download the lexicon then instantiate
+            try:
+                import nltk
+                nltk.download('vader_lexicon')
+                _analyzer = SentimentIntensityAnalyzer()
+                return _analyzer
+            except Exception:
+                _analyzer = None
+                return None
     except Exception:
-        nltk.download("vader_lexicon")
-        _ = SentimentIntensityAnalyzer()
-    _analyzer = _
-except Exception:
-    _analyzer = None
+        _analyzer = None
+        return None
 
 
 def _label_from_compound(compound: float) -> str:
@@ -27,8 +42,9 @@ def analyze_text(text: str) -> Dict[str, Any]:
     if not text:
         return {"compound": 0.0, "label": "Neutral", "scores": {}}
 
-    if _analyzer:
-        scores = _analyzer.polarity_scores(text)
+    analyzer = _get_analyzer()
+    if analyzer:
+        scores = analyzer.polarity_scores(text)
         compound = scores.get("compound", 0.0)
         label = _label_from_compound(compound)
         return {"compound": compound, "label": label, "scores": scores}

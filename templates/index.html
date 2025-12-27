@@ -38,7 +38,12 @@
                 <div class="d-flex mb-3 align-items-start">
                   <div class="avatar user" aria-hidden="true">You</div>
                   <div class="bubble user-bubble" role="article" tabindex="0" aria-label="User message at {{ msg.ts }}">
-                    <div class="message-text">{{ msg.text }}</div>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="message-text">{{ msg.text }}</div>
+                      {% if msg.sentiment %}
+                        <span class="badge sentiment-badge {{ msg.sentiment.label|lower }}">{{ msg.sentiment.label }}</span>
+                      {% endif %}
+                    </div>
                     {% if msg.ts %}
                       <div class="small text-muted mt-1 ts" data-iso="{{ msg.ts }}">{{ msg.ts }}</div>
                     {% endif %}
@@ -138,7 +143,13 @@
         const wrap = document.createElement('div');
         if (who === 'user') {
           wrap.className = 'd-flex mb-3 align-items-start';
-          wrap.innerHTML = `<div class="avatar user" aria-hidden="true">You</div><div class="bubble user-bubble" role="article" tabindex="0" aria-label="User message at ${ts}"><div class="message-text">${text}</div><div class="small text-muted mt-1">${new Date(ts).toLocaleString()}</div></div>`;
+          // allow optional sentiment (pass model param as object for user: {sentiment:{label,compound}})
+          let sentimentHtml = '';
+          if (model && model.sentiment) {
+            const lbl = model.sentiment.label || '';
+            sentimentHtml = `<span class="badge sentiment-badge ${lbl.toLowerCase()}">${lbl}</span>`;
+          }
+          wrap.innerHTML = `<div class="avatar user" aria-hidden="true">You</div><div class="bubble user-bubble" role="article" tabindex="0" aria-label="User message at ${ts}"><div class="d-flex align-items-center gap-2"><div class="message-text">${text}</div>${sentimentHtml}</div><div class="small text-muted mt-1">${new Date(ts).toLocaleString()}</div></div>`;
         } else {
           wrap.className = 'd-flex mb-3 justify-content-end align-items-start';
           wrap.innerHTML = `<div class="bubble bot-bubble" role="article" tabindex="0" aria-label="Bot message at ${ts}"><div class="message-text">${text}</div><div class="d-flex gap-2 align-items-center mt-1">${model?`<span class="badge bg-light text-dark model-badge">${model}</span>`:''}<div class="small text-muted">${new Date(ts).toLocaleString()}</div></div></div><div class="avatar bot" aria-hidden="true">Bot</div>`;
