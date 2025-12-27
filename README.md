@@ -1,4 +1,4 @@
-# Chatbot with Conversation-Level Sentiment Analysis
+# Chatbot with Conversation-Level Sentiment Analysis.
 
 [![CI](https://github.com/Codewithnavy/Liaplusai_assignment/actions/workflows/ci.yml/badge.svg)](https://github.com/Codewithnavy/Liaplusai_assignment/actions)
 
