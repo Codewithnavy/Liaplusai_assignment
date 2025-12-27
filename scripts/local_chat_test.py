@@ -1,20 +1,18 @@
 from app import app
 
 with app.test_client() as client:
-    # send a user message
-    r = client.post('/message', data={'message': 'Hello test'}, follow_redirects=True)
-    print('POST /message ->', r.status_code)
+    # send two user messages to build conversation
+    client.post('/message', data={'message': 'I am unhappy with the service'})
+    client.post('/message', data={'message': 'Actually it improved later'})
+    # end the conversation and get the sentiment report
+    r = client.post('/end')
+    print('POST /end ->', r.status_code)
     body = r.get_data(as_text=True)
-    # show whether user message and bot reply appear in the HTML
-    user_present = 'Hello test' in body
-    print('User text present in rendered page?:', user_present)
-    # heuristically look for fallback or bot text
-    has_bot = 'Thanks for sharing' in body or 'I\'m sorry to hear' in body or 'fallback' in body
-    print('Bot reply present?:', has_bot)
-    # print a short excerpt around the user message
-    if user_present:
-        idx = body.index('Hello test')
-        print(body[idx-200:idx+200])
+    print('Contains Conversation Sentiment Report?:', 'Conversation Sentiment Report' in body)
+    # print a short excerpt including overall label if present
+    if 'Conversation Sentiment Report' in body:
+        idx = body.find('Conversation Sentiment Report')
+        print(body[idx:idx+300])
     else:
-        print('Rendered page snippet:')
+        print('Result page snippet:')
         print(body[:800])
